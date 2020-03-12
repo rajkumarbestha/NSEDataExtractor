@@ -5,13 +5,14 @@ import pandas as pd
 class NSEDataExtractor:
     """
     This Class deals with data extraction from NSE.
-    Data extraction starts from yesterday's date. This step is taken to not to hardcode the url and date.
+    If no start date is given, Data extraction starts from yesterday's date.
     """
 
-    def __init__(self, url_to_get_data, columns_needed, data_for_number_of_days):
+    def __init__(self, url_to_get_data, columns_needed, data_for_number_of_days, start_date=datetime.now()):
         self.url_to_get_data = url_to_get_data.strip()
         self.columns_needed  = columns_needed
         self.data_for_number_of_days = data_for_number_of_days
+        self.start_date = start_date
 
 
     def construct_url_for_date(self, date_to_capture):
@@ -22,15 +23,6 @@ class NSEDataExtractor:
         date_to_string = date_to_capture.strftime('%d%b%Y').upper()
         url = self.url_to_get_data + '/' + date_to_string[-4:] + '/' + date_to_string[-7:-4] + '/cm' + date_to_string + 'bhav.csv.zip'
         return url
-
-    def start_date(self):
-        """
-        This method is used when the url contains the start date. Currently todays date is the start date.
-        """
-        
-        months = {'JAN':'01', 'FEB':'02', 'MAR':'03', 'APR':'04', 'MAY':'05', 'JUN':'06'} # So on.
-        string_date = self.url_to_get_data[-21:-12]
-        return datetime(int(string_date[5:]), int(months[string_date[2:5]]), int(string_date[0:2]))
 
 
     def get_zip_file(self, url):
@@ -60,7 +52,7 @@ class NSEDataExtractor:
 
         for i in range(self.data_for_number_of_days):
             try:
-                date_to_capture = datetime.now() - timedelta(i+1)
+                date_to_capture = self.start_date - timedelta(i+1)
 
                 # Checking for Non-Week Days.
                 if date_to_capture.weekday() not in (5, 6):
