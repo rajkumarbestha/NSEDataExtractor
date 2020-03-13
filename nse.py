@@ -8,7 +8,8 @@ class NSEDataExtractor:
     If no start date is given, Data extraction starts from yesterday's date.
     """
 
-    def __init__(self, url_to_get_data, columns_needed, data_for_number_of_days, start_date=datetime.now()):
+    def __init__(self, url_to_get_data, columns_needed = [], data_for_number_of_days = 30, start_date = datetime.now()):
+        # Strip to remove accidental whitespaces.
         self.url_to_get_data = url_to_get_data.strip()
         self.columns_needed  = columns_needed
         self.data_for_number_of_days = data_for_number_of_days
@@ -70,6 +71,29 @@ class NSEDataExtractor:
             # If the current date is a holiday, there'll be no data with NSE. So, the URL times out.
             except:
                 print(date_to_capture.strftime('%d%b%Y').upper(), "is a holiday. So, No data in NSE.")
+
+
+    def get_data_for_symbol(self, symbol, date_to_capture):
+        """
+        This method is a driver used by the flask app to get the details of the symbol on a particular date.
+        """
+
+        date_to_capture = datetime(int(date_to_capture.split('/')[-1]), int(date_to_capture.split('/')[1]), int(date_to_capture.split('/')[0]))
+
+        try:
+            # Get URL.
+            url = self.construct_url_for_date(date_to_capture)
+            print(url)
+
+            # Get ZipFile.
+            zip = self.get_zip_file(url)
+
+            # Get data from csv in zip.
+            data = pd.read_csv(zip.open('cm'+date_to_capture.strftime('%d%b%Y').upper()+'bhav.csv'))
+            return data[data.SYMBOL.str.contains(symbol,case=False)].to_dict()
+        except:
+            return "No Data in NSE."
+
 
 
 # If running as a file, rather than an import, then instantiate and test.
